@@ -2,40 +2,45 @@ const express = require("express");
 const router = express.Router();
 
 const quizController = require("../controllers/quizController");
-const authMiddleware = require("../middleware/authMiddleware");
-const roleMiddleware = require("../middleware/roleMiddleware");
 
-// Teacher only
+const { verifyToken } = require("../middleware/authMiddleware");
+const { verifyTeacher } = require("../middleware/roleMiddleware");
+
+// Create Quiz
 router.post(
     "/",
-    authMiddleware,
-    roleMiddleware("teacher"),
+    verifyToken,
+    verifyTeacher,
     quizController.createQuiz
 );
 
+// Get All Quizzes
 router.get(
     "/",
-    authMiddleware,
+    verifyToken,
     quizController.getAllQuizzes
 );
 
+// Get Quiz By ID
 router.get(
     "/:id",
-    authMiddleware,
+    verifyToken,
     quizController.getQuizById
 );
 
+// Update Quiz
 router.put(
     "/:id",
-    authMiddleware,
-    roleMiddleware("teacher"),
+    verifyToken,
+    verifyTeacher,
     quizController.updateQuiz
 );
 
+// Delete Quiz
 router.delete(
     "/:id",
-    authMiddleware,
-    roleMiddleware("teacher"),
+    verifyToken,
+    verifyTeacher,
     quizController.deleteQuiz
 );
 
