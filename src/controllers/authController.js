@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
     try {
@@ -44,4 +45,105 @@ exports.register = async (req, res) => {
             error: err.message
         });
     }
+};
+
+exports.login = async (req, res) => {
+
+    try {
+
+        const { email, password } = req.body;
+
+        // Check fields
+        if (!email || !password) {
+
+            return res.status(400).json({
+                error: "Email and Password are required"
+            });
+
+        }
+
+        // Find user
+        const result = await pool.query(
+
+            "SELECT * FROM users WHERE email=$1",
+
+            [email]
+
+        );
+
+        // User not found
+        if (result.rows.length === 0) {
+
+            return res.status(401).json({
+                error: "Invalid Email or Password"
+            });
+
+        }
+
+        const user = result.rows[0];
+
+        // Compare password
+        const validPassword = await bcrypt.compare(
+            password,
+            user.password_hash
+        );
+
+        if (!validPassword) {
+
+            return res.status(401).json({
+                error: "Invalid Email or Password"
+            });
+
+        }
+
+        // Create JWT Token
+        const token = jwt.sign(
+
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            },
+
+            process.env.JWT_SECRET,
+
+            {
+                expiresIn: "1d"
+            }
+
+        );
+
+        // Send response
+        res.status(200).json({
+
+            message: "Login Successful",
+
+            token,
+
+            user: {
+
+                id: user.id,
+
+                full_name: user.full_name,
+
+                email: user.email,
+
+                role: user.role
+
+            }
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
 };
