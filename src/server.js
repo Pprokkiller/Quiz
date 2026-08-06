@@ -31,3 +31,7 @@ app.use("/api/questions", questionRoutes);
 const optionRoutes = require("./routes/optionRoutes");
 
 app.use("/api/options", optionRoutes);
+
+const sessionRoutes = require("./routes/sessionRoutes");
+
+app.use("/api/session", sessionRoutes);
