@@ -23,3 +23,7 @@ app.listen(PORT, () => {
 const quizRoutes = require("./routes/quizRoutes");
 
 app.use("/api/quizzes", quizRoutes);
+
+const questionRoutes = require("./routes/questionRoutes");
+
+app.use("/api/questions", questionRoutes);
