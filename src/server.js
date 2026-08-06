@@ -27,3 +27,7 @@ app.use("/api/quizzes", quizRoutes);
 const questionRoutes = require("./routes/questionRoutes");
 
 app.use("/api/questions", questionRoutes);
+
+const optionRoutes = require("./routes/optionRoutes");
+
+app.use("/api/options", optionRoutes);
