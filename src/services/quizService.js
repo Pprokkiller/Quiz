@@ -47,16 +47,18 @@ exports.createQuiz = async (teacherId, quizData) => {
 };
 
 // ========================
-// Get All Quizzes
+// Get Teacher's Quizzes
 // ========================
-exports.getAllQuizzes = async () => {
+exports.getAllQuizzes = async (teacherId) => {
 
     const result = await pool.query(
         `
         SELECT *
         FROM quizzes
+        WHERE teacher_id = $1
         ORDER BY created_at DESC
-        `
+        `,
+        [teacherId]
     );
 
     return result.rows;

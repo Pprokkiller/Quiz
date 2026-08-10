@@ -26,11 +26,16 @@ exports.createQuiz = async (req, res) => {
     }
 };
 
-// Get All Quizzes
+// Get Teacher's Quizzes
 exports.getAllQuizzes = async (req, res) => {
+
     try {
 
-        const quizzes = await quizService.getAllQuizzes();
+        const teacherId = req.user.id;
+
+        const quizzes = await quizService.getAllQuizzes(
+            teacherId
+        );
 
         res.status(200).json({
             success: true,
@@ -38,6 +43,8 @@ exports.getAllQuizzes = async (req, res) => {
         });
 
     } catch (error) {
+
+        console.error(error);
 
         res.status(500).json({
             success: false,
