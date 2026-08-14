@@ -127,6 +127,9 @@ exports.getQuizById = async (quizId) => {
 // ========================
 // Update Quiz
 // ========================
+// ========================
+// Update Quiz
+// ========================
 exports.updateQuiz = async (quizId, quizData) => {
 
     const {
@@ -147,8 +150,7 @@ exports.updateQuiz = async (quizId, quizData) => {
             subject = $3,
             difficulty = $4,
             quiz_type = $5,
-            total_marks = $6,
-            updated_at = NOW()
+            total_marks = $6
         WHERE quiz_id = $7
         RETURNING *
         `,
