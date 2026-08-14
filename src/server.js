@@ -15,6 +15,7 @@ const sessionRoutes = require("./routes/sessionRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const responseRoutes = require("./routes/responseRoutes");
 const participantRoutes = require("./routes/participantRoutes");
+const resultRoutes = require("./routes/resultRoutes");
 
 
 // =============================
@@ -47,6 +48,7 @@ app.use("/api/responses", responseRoutes);
 
 app.use("/api/participants", participantRoutes);
 
+app.use("/api/results", resultRoutes);
 
 // =============================
 // TEST ROUTE
