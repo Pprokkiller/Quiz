@@ -4,7 +4,6 @@ const pool = require("../config/db");
 // Create Quiz
 // ========================
 exports.createQuiz = async (teacherId, quizData) => {
-
     const {
         title,
         description,
@@ -26,10 +25,7 @@ exports.createQuiz = async (teacherId, quizData) => {
             quiz_type,
             total_marks
         )
-
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7)
-
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
         RETURNING *
         `,
         [
@@ -46,6 +42,7 @@ exports.createQuiz = async (teacherId, quizData) => {
     return result.rows[0];
 };
 
+
 // ========================
 // Get Teacher's Quizzes
 // ========================
@@ -53,10 +50,15 @@ exports.getAllQuizzes = async (teacherId) => {
 
     const result = await pool.query(
         `
-        SELECT *
-        FROM quizzes
-        WHERE teacher_id = $1
-        ORDER BY created_at DESC
+        SELECT
+            q.*,
+            COUNT(questions.question_id)::int AS question_count
+        FROM quizzes q
+        LEFT JOIN questions
+            ON questions.quiz_id = q.quiz_id
+        WHERE q.teacher_id = $1
+        GROUP BY q.quiz_id
+        ORDER BY q.created_at DESC
         `,
         [teacherId]
     );
@@ -64,12 +66,14 @@ exports.getAllQuizzes = async (teacherId) => {
     return result.rows;
 };
 
+
 // ========================
 // Get Quiz By ID
+// Includes Questions + Options
 // ========================
 exports.getQuizById = async (quizId) => {
 
-    const result = await pool.query(
+    const quizResult = await pool.query(
         `
         SELECT *
         FROM quizzes
@@ -78,8 +82,47 @@ exports.getQuizById = async (quizId) => {
         [quizId]
     );
 
-    return result.rows[0];
+    if (quizResult.rows.length === 0) {
+        return null;
+    }
+
+    const quiz = quizResult.rows[0];
+
+
+    // Get questions
+    const questionsResult = await pool.query(
+        `
+        SELECT *
+        FROM questions
+        WHERE quiz_id = $1
+        ORDER BY question_id ASC
+        `,
+        [quizId]
+    );
+
+
+    // Get options for every question
+    for (const question of questionsResult.rows) {
+
+        const optionsResult = await pool.query(
+            `
+            SELECT *
+            FROM options
+            WHERE question_id = $1
+            ORDER BY option_id ASC
+            `,
+            [question.question_id]
+        );
+
+        question.options = optionsResult.rows;
+    }
+
+
+    quiz.questions = questionsResult.rows;
+
+    return quiz;
 };
+
 
 // ========================
 // Update Quiz
@@ -98,17 +141,15 @@ exports.updateQuiz = async (quizId, quizData) => {
     const result = await pool.query(
         `
         UPDATE quizzes
-
         SET
-            title=$1,
-            description=$2,
-            subject=$3,
-            difficulty=$4,
-            quiz_type=$5,
-            total_marks=$6
-
-        WHERE quiz_id=$7
-
+            title = $1,
+            description = $2,
+            subject = $3,
+            difficulty = $4,
+            quiz_type = $5,
+            total_marks = $6,
+            updated_at = NOW()
+        WHERE quiz_id = $7
         RETURNING *
         `,
         [
@@ -124,6 +165,7 @@ exports.updateQuiz = async (quizId, quizData) => {
 
     return result.rows[0];
 };
+
 
 // ========================
 // Delete Quiz
