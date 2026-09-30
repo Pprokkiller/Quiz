@@ -3,12 +3,15 @@ const express = require("express");
 const router = express.Router();
 
 const responseController = require("../controllers/responseController");
+const { verifyToken } = require("../middleware/authMiddleware");
+const { verifyTeacher } = require("../middleware/roleMiddleware");
 
 // ========================================
 // Student submits an answer
 // ========================================
 router.post(
     "/",
+    verifyToken,
     responseController.submitResponse
 );
 
@@ -18,6 +21,7 @@ router.post(
 // ========================================
 router.get(
     "/participant/:participantId",
+    verifyToken,
     responseController.getParticipantResponses
 );
 
@@ -27,6 +31,7 @@ router.get(
 // ========================================
 router.get(
     "/participant/:participantId/progress",
+    verifyToken,
     responseController.getParticipantProgress
 );
 
@@ -36,6 +41,8 @@ router.get(
 // ========================================
 router.get(
     "/session/:sessionId",
+    verifyToken,
+    verifyTeacher,
     responseController.getSessionResponses
 );
 
@@ -45,6 +52,7 @@ router.get(
 // ========================================
 router.get(
     "/session/:sessionId/leaderboard",
+    verifyToken,
     responseController.getSessionLeaderboard
 );
 

@@ -159,3 +159,54 @@ exports.getStudentDashboard = async (studentId) => {
 
     };
 };
+
+// =====================================================
+// Get All Past Results For A Student
+// =====================================================
+
+exports.getStudentResults = async (studentId) => {
+
+    const result = await pool.query(
+        `
+        SELECT
+            r.result_id,
+            r.participant_id,
+            r.score,
+            r.percentage,
+            r.rank,
+            r.submitted_at,
+
+            q.quiz_id,
+            q.title,
+            q.subject,
+            q.difficulty,
+            q.total_marks,
+
+            qs.session_id,
+
+            (
+                SELECT COUNT(*)::int
+                FROM questions qu
+                WHERE qu.quiz_id = q.quiz_id
+            ) AS total_questions
+
+        FROM results r
+
+        INNER JOIN participants p
+            ON r.participant_id = p.participant_id
+
+        INNER JOIN quiz_sessions qs
+            ON p.session_id = qs.session_id
+
+        INNER JOIN quizzes q
+            ON qs.quiz_id = q.quiz_id
+
+        WHERE p.student_id = $1
+
+        ORDER BY r.submitted_at DESC
+        `,
+        [studentId]
+    );
+
+    return result.rows;
+};

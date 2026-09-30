@@ -1,0 +1,29 @@
+--- /home/protyush/backup/quiz/Quiz/src/services/resultService.js
++++ /home/protyush/backup/quiz/Quiz/src/services/resultService.js
+@@ -49,15 +49,23 @@
+         `
+         SELECT
+-            COUNT(*) FILTER (WHERE is_correct = true)::int AS correct_answers,
+-            COUNT(*)::int AS total_questions
++            COUNT(*) FILTER (WHERE is_correct = true)::int AS correct_answers
+         FROM responses
+         WHERE participant_id = $1
+         `,
+         [participantId]
+     );
++
++    // Get total questions for this quiz
++    const questionCountResult = await pool.query(
++        `
++        SELECT COUNT(*)::int AS total_questions
++        FROM questions
++        WHERE quiz_id = $1
++        `,
++        [quiz.quiz_id]
++    );
+ 
+     const correctAnswers = responseResult.rows[0].correct_answers || 0;
+-    const totalQuestions = responseResult.rows[0].total_questions || 0;
++    const totalQuestions = questionCountResult.rows[0].total_questions || 0;
+ 
+     // Calculate percentage

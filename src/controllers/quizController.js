@@ -37,6 +37,15 @@ exports.getAllQuizzes = async (req, res) => {
             teacherId
         );
 
+        // If student, strip out is_correct
+        if (req.user && req.user.role === "student") {
+            quiz.questions.forEach(q => {
+                if (q.options) {
+                    q.options.forEach(o => delete o.is_correct);
+                }
+            });
+        }
+
         res.status(200).json({
             success: true,
             data: quizzes

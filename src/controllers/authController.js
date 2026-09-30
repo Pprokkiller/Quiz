@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
             (full_name, email, password_hash, role)
             VALUES ($1,$2,$3,$4)
             RETURNING id, full_name, email, role, created_at`,
-            [full_name, email, password_hash, role]
+            [full_name, email, password_hash, role.toLowerCase()]
         );
 
         res.status(201).json({
@@ -102,7 +102,7 @@ exports.login = async (req, res) => {
             {
                 id: user.id,
                 email: user.email,
-                role: user.role
+                role: user.role.toLowerCase()
             },
 
             process.env.JWT_SECRET,
@@ -128,7 +128,7 @@ exports.login = async (req, res) => {
 
                 email: user.email,
 
-                role: user.role
+                role: user.role.toLowerCase()
 
             }
 

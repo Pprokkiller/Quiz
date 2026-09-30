@@ -48,8 +48,7 @@ exports.generateResult = async (participantId) => {
     const responseResult = await pool.query(
         `
         SELECT
-            COUNT(*) FILTER (WHERE is_correct = true)::int AS correct_answers,
-            COUNT(*)::int AS total_questions
+            COUNT(*) FILTER (WHERE is_correct = true)::int AS correct_answers
         FROM responses
         WHERE participant_id = $1
         `,
@@ -57,7 +56,12 @@ exports.generateResult = async (participantId) => {
     );
 
     const correctAnswers = responseResult.rows[0].correct_answers || 0;
-    const totalQuestions = responseResult.rows[0].total_questions || 0;
+    const questionCountResult = await pool.query(
+        "SELECT COUNT(*)::int AS total_questions FROM questions WHERE quiz_id = $1",
+        [quiz.quiz_id]
+    );
+
+    const totalQuestions = questionCountResult.rows[0].total_questions || 0;
 
     // Calculate percentage
     const percentage =
@@ -128,15 +132,21 @@ exports.generateResult = async (participantId) => {
     // Calculate rank
     await pool.query(
         `
-        WITH ranked_results AS (
+        WITH session_info AS (
+            SELECT qs.session_id
+            FROM participants p
+            JOIN quiz_sessions qs ON qs.session_id = p.session_id
+            WHERE p.participant_id = $1
+        ),
+        ranked_results AS (
             SELECT
-                result_id,
+                r.result_id,
                 RANK() OVER (
-                    PARTITION BY participant_id
-                    ORDER BY percentage DESC
+                    ORDER BY r.percentage DESC
                 ) AS calculated_rank
-            FROM results
-            WHERE participant_id = $1
+            FROM results r
+            JOIN participants p ON p.participant_id = r.participant_id
+            WHERE p.session_id = (SELECT session_id FROM session_info)
         )
         UPDATE results r
         SET rank = rr.calculated_rank
@@ -241,5 +251,37 @@ exports.getSessionResults = async (sessionId) => {
         [sessionId]
     );
 
+    return result.rows;
+};
+// ======================================
+// Get All Results For a Specific Quiz (Across all sessions)
+// ======================================
+exports.getQuizResults = async (quizId, teacherId) => {
+    // We join results -> participants -> quiz_sessions -> quizzes
+    // We also make sure the quiz belongs to the requesting teacher
+    const query = `
+        SELECT
+            r.result_id,
+            r.score,
+            r.percentage,
+            r.rank,
+            r.submitted_at,
+            p.participant_id,
+            u.full_name AS student_name,
+            u.email AS student_email,
+            qs.session_id,
+            qs.status AS session_status,
+            q.title AS quiz_title,
+            q.total_marks
+        FROM results r
+        JOIN participants p ON r.participant_id = p.participant_id
+        JOIN users u ON p.student_id = u.id
+        JOIN quiz_sessions qs ON p.session_id = qs.session_id
+        JOIN quizzes q ON qs.quiz_id = q.quiz_id
+        WHERE q.quiz_id = $1 AND q.teacher_id = $2
+        ORDER BY r.percentage DESC, r.submitted_at DESC;
+    `;
+
+    const result = await pool.query(query, [quizId, teacherId]);
     return result.rows;
 };

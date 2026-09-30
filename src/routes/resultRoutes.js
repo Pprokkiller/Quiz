@@ -41,4 +41,14 @@ router.get(
 );
 
 
+// ======================================
+// Get All Results For Quiz
+// Teacher views all student results for a specific quiz
+// ======================================
+router.get(
+    "/quiz/:quizId",
+    verifyToken,
+    verifyTeacher,
+    resultController.getQuizResults
+);
 module.exports = router;

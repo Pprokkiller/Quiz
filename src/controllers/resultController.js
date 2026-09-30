@@ -94,3 +94,25 @@ exports.getSessionResults = async (req, res) => {
         });
     }
 };
+// ======================================
+// Get All Results for a Quiz
+// ======================================
+exports.getQuizResults = async (req, res) => {
+    try {
+        const { quizId } = req.params;
+        const teacherId = req.user.id;
+
+        const results = await resultService.getQuizResults(quizId, teacherId);
+
+        res.status(200).json({
+            success: true,
+            data: results
+        });
+
+    } catch (error) {
+        console.error("Get quiz results error:", error);
+        res.status(500).json({
+            success: false, message: "Failed to get quiz results."
+        });
+    }
+};

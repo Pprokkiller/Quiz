@@ -18,4 +18,14 @@ router.get(
     studentController.getDashboardData
 );
 
+// ======================================
+// Get All Past Results For A Student
+// ======================================
+
+router.get(
+    "/results",
+    verifyToken,
+    verifyStudent,
+    studentController.getStudentResults
+);
 module.exports = router;

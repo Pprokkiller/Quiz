@@ -102,11 +102,11 @@ exports.getSessionParticipants = async (sessionId) => {
         `
         SELECT
             p.*,
-            u.name,
+            u.full_name AS name,
             u.email
         FROM participants p
         JOIN users u
-            ON u.user_id = p.student_id
+            ON u.id = p.student_id
         WHERE p.session_id = $1
         ORDER BY p.joined_at ASC
         `,
